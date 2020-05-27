@@ -14,7 +14,7 @@ class Database:
         self.userFriendRequest = {}     # Key: username -- Val: list contains all names of friend-requests of username
                                         # ex: userFriendRequest['tienanh'] = ['khoi1', 'huy1']
         self.lock = threading.Lock()
-        #self.load()
+        self.load()
 
     def save(self):
         # TODO
@@ -71,6 +71,7 @@ class Database:
         else:
             self.lock.acquire()
             listRequest.append(username1)
+            self.save()  # -----
             self.lock.release()
             print(self.userFriendRequest[username2])
             return True
@@ -113,6 +114,7 @@ class Database:
             listFriend1.append(username2)
             listFriend2.append(username1)
             listRequest2.remove(username1)
+            self.save()  # ------------------
             self.lock.release()
             return True
 
@@ -130,22 +132,20 @@ class Database:
         else:
             self.lock.acquire()
             listRequest2.remove(username1)
+            self.save()  #----------
             self.lock.release()
             return True
 
     def Login(self, username, password):
         if not self.isRegistered(username):
             return False
-        
         if self.userDict[username].password != password:
-            return Fasle
-
+            return False
         return True
 
     def online(self, username):
         if not self.isRegistered(username):
             return False
-        
         else:
             self.userDict[username].status = True
             return True
@@ -153,7 +153,6 @@ class Database:
     def offline(self, username):
         if not self.isRegistered(username):
             return False
-
         else:
             self.userDict[username].status = False
             return True

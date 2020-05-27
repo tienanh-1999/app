@@ -64,12 +64,15 @@ class UI:
                     print(request)
 
                 elif cmd == "file":
-                    self.client.sendFile()
+                    file = input("Input file name: ")
+                    if self.client.sendFile(file):
+                        print("success")
+                    else:
+                        print("file does not exist")
 
                 elif cmd == "shutdown":
                     self.client.shutdown()
                     return
-
 
             elif self.state == 2:
                 break

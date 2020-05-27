@@ -44,6 +44,7 @@ class Service:
             self.username = username
             self.password = password
             self.database.online(username)
+            self.database.save()
             print("Welcome", username)
         else:
             self.Send_message('Failed')
@@ -105,15 +106,15 @@ class Service:
             self.Send_message("Failed")
 
     def sendFile(self):
-        f = open('result3.pdf', 'wb')
+        file = self.Receive_message()['data']
+        f = open('file/' + file, 'wb')
         len_pieces = int(self.Receive_message()['data'])  # number of pieces
         print("len pieces ", len_pieces)
         for i in range(len_pieces):
             data = self.socket.recv(1024)
             f.write(data)
-            print(i)
         f.close()
-        print("closed")
+        print("sending successful")
 
     def acceptFriendRequest(self):
         username = self.Receive_message()['data']

@@ -39,7 +39,7 @@ class Server:
             service = Service.Service(conn, addr, self.database, self.lock)
             thread = threading.Thread(target=self.Verify_thread, args=(service,))
             thread.start()
-
+        self.database.save()
         self.shutdownAllService()
         self.socket.close()
 

@@ -1,16 +1,20 @@
 import socket
+import os.path
+from os import path
+
 HEADER_LENGTH = 10
 
 HOST = "127.0.0.1"
 PORT = 5050
+
 
 class Client:
     def __init__(self):
         self.socket = None
 
     def Connect(self):
-        #This method will connect client socket to server socket 
-        
+        # This method will connect client socket to server socket
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((HOST, PORT))
         res = self.Receive_message()['data']
@@ -19,15 +23,15 @@ class Client:
             return False
 
         return True
-        
+
     def Receive_message(self):
-        #This method is used to receive message from server
+        # This method is used to receive message from server
 
         message_header = self.socket.recv(HEADER_LENGTH)
 
         if not len(message_header):
             self.close()
-            return {'header': None,'data': None}
+            return {'header': None, 'data': None}
 
         # Convert header to int value
         message_length = int(message_header.decode('utf-8').strip())
@@ -36,15 +40,15 @@ class Client:
         return {'header': message_header, 'data': self.socket.recv(message_length).decode('utf-8')}
 
     def Send_message(self, message):
-        #This method is used to send message to server
-        #Arg: message: a string object
+        # This method is used to send message to server
+        # Arg: message: a string object
 
         message = message.encode('utf-8')
         message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')
-        self.socket.send(message_header + message)        
+        self.socket.send(message_header + message)
 
     def Register(self, username, password):
-        #Register services
+        # Register services
 
         self.Send_message("Register")
         self.Send_message(username)
@@ -94,13 +98,13 @@ class Client:
             requestList = []
             for _ in range(length):
                 username = self.Receive_message()['data']
-                #status = self.Receive_message()['data']
+                # status = self.Receive_message()['data']
                 requestList.append(username)
             return requestList
 
         else:
             return None
-            
+
     def acceptFriendRequest(self, username2):
         self.Send_message("acceptFriendRequest")
         self.Send_message(username2)
@@ -109,7 +113,7 @@ class Client:
             return True
         else:
             return False
-        
+
     def rejectFriendRequest(self, username2):
         self.Send_message("rejectFriendRequest")
         self.Send_message(username2)
@@ -128,23 +132,28 @@ class Client:
         else:
             return False
 
-    def sendFile(self):
+    def sendFile(self, file):
+        filePath = "file_test/" + file
+        if not path.exists(filePath):
+            return False
         self.Send_message("sendFile")
-        with open("file_test/course.pdf", "rb") as f:
-            data = f.read()
+        self.Send_message(file)
+        f = open("file_test/" + file, "rb")
+        data = f.read()
         numByte = len(data)
         print("num byte: ", numByte)
-        len_pieces = []
-        len_pieces += [1024]*int(numByte/1024)
-        len_pieces.append(numByte - int(numByte/1024)*1024)
-        print("pieces: ", len_pieces)
-        self.Send_message(str(len(len_pieces)))  # send the number of pieces
-        f = open("file_test/sem_183.png", "rb")
-        for piece in len_pieces:
-            piece_data = f.read(piece)
+        if numByte % 1024 == 0:
+            numPieces = int(numByte / 1024)
+        else:
+            numPieces = int(numByte / 1024) + 1
+        self.Send_message(str(numPieces))  # send the number of pieces
+        for i in range(numPieces-1):
+            piece_data = data[1024*i:1024*(i+1)]
             self.socket.send(piece_data)
+        piece_data = data[1024 * (numPieces-1):]
+        self.socket.send(piece_data)
         f.close()
-        print("closed")
+        return True
 
     def shutdown(self):
         self.Send_message("shutdown")
@@ -165,4 +174,3 @@ class Client:
                 self.socket.close()
                 break
             self.Register()
-
